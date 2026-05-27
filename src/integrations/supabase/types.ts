@@ -14,7 +14,95 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      projects: {
+        Row: {
+          author: string | null
+          cover_url: string | null
+          created_at: string
+          description: string | null
+          git_url: string | null
+          id: string
+          production_url: string | null
+          tags: string[] | null
+          title: string
+          type: Database["public"]["Enums"]["project_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          author?: string | null
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          git_url?: string | null
+          id?: string
+          production_url?: string | null
+          tags?: string[] | null
+          title: string
+          type: Database["public"]["Enums"]["project_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          author?: string | null
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          git_url?: string | null
+          id?: string
+          production_url?: string | null
+          tags?: string[] | null
+          title?: string
+          type?: Database["public"]["Enums"]["project_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      versions: {
+        Row: {
+          changelog: string | null
+          created_at: string
+          git_commit: string | null
+          id: string
+          project_id: string
+          user_id: string
+          version: string
+          zip_path: string
+          zip_size: number | null
+        }
+        Insert: {
+          changelog?: string | null
+          created_at?: string
+          git_commit?: string | null
+          id?: string
+          project_id: string
+          user_id: string
+          version: string
+          zip_path: string
+          zip_size?: number | null
+        }
+        Update: {
+          changelog?: string | null
+          created_at?: string
+          git_commit?: string | null
+          id?: string
+          project_id?: string
+          user_id?: string
+          version?: string
+          zip_path?: string
+          zip_size?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "versions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +111,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      project_type: "pagina" | "saas"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +238,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      project_type: ["pagina", "saas"],
+    },
   },
 } as const
