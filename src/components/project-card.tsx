@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
 import { ExternalLink, GitBranch, User, ImageIcon } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import { typeLabel } from "@/lib/project-types";
 
 type Project = Database["public"]["Tables"]["projects"]["Row"];
 
@@ -21,7 +22,7 @@ export function ProjectCard({ p }: { p: Project }) {
           </div>
         )}
         <Badge variant="secondary" className="absolute top-3 right-3 text-[10px] uppercase tracking-wide rounded-full backdrop-blur-md bg-background/70">
-          {p.type === "pagina" ? "página" : "saas"}
+          {typeLabel(p.type)}
         </Badge>
       </div>
       <div className="p-4 flex flex-col gap-2.5 flex-1">

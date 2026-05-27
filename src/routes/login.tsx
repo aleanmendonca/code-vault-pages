@@ -10,14 +10,14 @@ import { Vault } from "lucide-react";
 
 export const Route = createFileRoute("/login")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Entrar — CodeVault" }] }),
+  head: () => ({ meta: [{ title: "Entrar — Cloud Code Vault" }] }),
   component: LoginPage,
 });
 
 function LoginPage() {
   const nav = useNavigate();
   const [mode, setMode] = useState<"login" | "signup">("login");
-  const [email, setEmail] = useState("aleanmendonca@gmail.com");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -62,7 +62,7 @@ function LoginPage() {
               <Vault className="h-5 w-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold tracking-tight">CodeVault</h1>
+              <h1 className="text-xl font-semibold tracking-tight">Cloud Code Vault</h1>
               <p className="text-sm text-muted-foreground">
                 {mode === "login" ? "Entre para gerenciar seus projetos." : "Crie sua conta."}
               </p>

@@ -111,7 +111,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      project_type: "pagina" | "saas"
+      project_type: "pagina" | "saas" | "ia"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -239,7 +239,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      project_type: ["pagina", "saas"],
+      project_type: ["pagina", "saas", "ia"],
     },
   },
 } as const

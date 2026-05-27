@@ -10,14 +10,15 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ArrowLeft, Sparkles } from "lucide-react";
+import { routeForType } from "@/lib/project-types";
 
 const searchSchema = z.object({
-  type: z.enum(["pagina", "saas"]).optional(),
+  type: z.enum(["pagina", "saas", "ia"]).optional(),
 });
 
 export const Route = createFileRoute("/_app/novo")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Novo projeto — CodeVault" }] }),
+  head: () => ({ meta: [{ title: "Novo projeto — Cloud Code Vault" }] }),
   validateSearch: searchSchema,
   component: NewProject,
 });
@@ -28,7 +29,7 @@ function NewProject() {
   const search = Route.useSearch();
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState({
-    type: (search.type ?? "pagina") as "pagina" | "saas",
+    type: (search.type ?? "pagina") as "pagina" | "saas" | "ia",
     title: "",
     description: "",
     production_url: "",
@@ -102,7 +103,7 @@ function NewProject() {
     <div className="p-8 max-w-3xl mx-auto">
       <button
         type="button"
-        onClick={() => nav({ to: form.type === "saas" ? "/saas" : "/paginas" })}
+        onClick={() => nav({ to: routeForType(form.type) })}
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
       >
         <ArrowLeft className="h-4 w-4" /> Voltar
@@ -128,6 +129,7 @@ function NewProject() {
                 <SelectContent>
                   <SelectItem value="pagina">Página</SelectItem>
                   <SelectItem value="saas">SaaS</SelectItem>
+                  <SelectItem value="ia">IA</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -187,7 +189,7 @@ function NewProject() {
           </div>
 
           <div className="flex gap-2 justify-end pt-2">
-            <Button type="button" variant="outline" className="h-11 rounded-xl" onClick={() => nav({ to: "/paginas" })}>Cancelar</Button>
+            <Button type="button" variant="outline" className="h-11 rounded-xl" onClick={() => nav({ to: routeForType(form.type) })}>Cancelar</Button>
             <Button type="submit" disabled={busy} className="h-11 rounded-xl bg-gradient-primary px-6">{busy ? "Salvando…" : "Cadastrar projeto"}</Button>
           </div>
         </form>

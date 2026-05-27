@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
-import { FileCode2, Layers, Plus, LogOut, Vault } from "lucide-react";
+import { FileCode2, Layers, Plus, LogOut, Vault, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app")({
@@ -27,6 +27,7 @@ function AppLayout() {
   const items = [
     { to: "/paginas", label: "Páginas", icon: FileCode2 },
     { to: "/saas", label: "SaaS", icon: Layers },
+    { to: "/ia", label: "IA", icon: Bot },
   ];
 
   return (
@@ -37,7 +38,7 @@ function AppLayout() {
           <div className="h-8 w-8 rounded-lg bg-gradient-primary grid place-items-center shadow-sm">
             <Vault className="h-4 w-4 text-primary-foreground" />
           </div>
-          <span className="text-base font-semibold tracking-tight">CodeVault</span>
+          <span className="text-base font-semibold tracking-tight">Cloud Code Vault</span>
         </div>
         <nav className="flex-1 p-3 space-y-1">
           <Link

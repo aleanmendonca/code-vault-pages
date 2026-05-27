@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppSaasRouteImport } from './routes/_app/saas'
 import { Route as AppPaginasRouteImport } from './routes/_app/paginas'
 import { Route as AppNovoRouteImport } from './routes/_app/novo'
+import { Route as AppIaRouteImport } from './routes/_app/ia'
 import { Route as AppPIdRouteImport } from './routes/_app/p.$id'
 
 const LoginRoute = LoginRouteImport.update({
@@ -46,6 +47,11 @@ const AppNovoRoute = AppNovoRouteImport.update({
   path: '/novo',
   getParentRoute: () => AppRoute,
 } as any)
+const AppIaRoute = AppIaRouteImport.update({
+  id: '/ia',
+  path: '/ia',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppPIdRoute = AppPIdRouteImport.update({
   id: '/p/$id',
   path: '/p/$id',
@@ -55,6 +61,7 @@ const AppPIdRoute = AppPIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/ia': typeof AppIaRoute
   '/novo': typeof AppNovoRoute
   '/paginas': typeof AppPaginasRoute
   '/saas': typeof AppSaasRoute
@@ -63,6 +70,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/ia': typeof AppIaRoute
   '/novo': typeof AppNovoRoute
   '/paginas': typeof AppPaginasRoute
   '/saas': typeof AppSaasRoute
@@ -73,6 +81,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
+  '/_app/ia': typeof AppIaRoute
   '/_app/novo': typeof AppNovoRoute
   '/_app/paginas': typeof AppPaginasRoute
   '/_app/saas': typeof AppSaasRoute
@@ -80,14 +89,15 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/novo' | '/paginas' | '/saas' | '/p/$id'
+  fullPaths: '/' | '/login' | '/ia' | '/novo' | '/paginas' | '/saas' | '/p/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/novo' | '/paginas' | '/saas' | '/p/$id'
+  to: '/' | '/login' | '/ia' | '/novo' | '/paginas' | '/saas' | '/p/$id'
   id:
     | '__root__'
     | '/'
     | '/_app'
     | '/login'
+    | '/_app/ia'
     | '/_app/novo'
     | '/_app/paginas'
     | '/_app/saas'
@@ -144,6 +154,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppNovoRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/ia': {
+      id: '/_app/ia'
+      path: '/ia'
+      fullPath: '/ia'
+      preLoaderRoute: typeof AppIaRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/p/$id': {
       id: '/_app/p/$id'
       path: '/p/$id'
@@ -155,6 +172,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppIaRoute: typeof AppIaRoute
   AppNovoRoute: typeof AppNovoRoute
   AppPaginasRoute: typeof AppPaginasRoute
   AppSaasRoute: typeof AppSaasRoute
@@ -162,6 +180,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppIaRoute: AppIaRoute,
   AppNovoRoute: AppNovoRoute,
   AppPaginasRoute: AppPaginasRoute,
   AppSaasRoute: AppSaasRoute,
@@ -178,3 +197,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
