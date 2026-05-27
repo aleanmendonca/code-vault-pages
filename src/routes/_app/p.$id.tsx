@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Download, ExternalLink, GitBranch, Trash2, Upload, User } from "lucide-react";
 
 export const Route = createFileRoute("/_app/p/$id")({
+  ssr: false,
   head: () => ({ meta: [{ title: "Projeto — CodeVault" }] }),
   component: ProjectDetail,
 });
