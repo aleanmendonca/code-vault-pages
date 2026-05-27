@@ -7,6 +7,7 @@ import { FileCode2, Layers, Plus, LogOut, Vault } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app")({
+  ssr: false,
   component: AppLayout,
 });
 
