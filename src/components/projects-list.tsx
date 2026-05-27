@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ProjectCard } from "@/components/project-card";
 import { Link } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
+import { Plus, FolderOpen } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 type T = Database["public"]["Enums"]["project_type"];
@@ -22,39 +22,42 @@ export function ProjectsList({ type, title }: { type: T; title: string }) {
   });
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <header className="flex items-center justify-between mb-6">
+    <div className="p-8 max-w-7xl mx-auto">
+      <header className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-lg font-semibold tracking-tight">{title}</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {data?.length ?? 0} {data?.length === 1 ? "projeto" : "projetos"}
+          <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {data?.length ?? 0} {data?.length === 1 ? "projeto cadastrado" : "projetos cadastrados"}
           </p>
         </div>
         <Link
           to="/novo"
           search={{ type }}
-          className="inline-flex items-center gap-1.5 text-xs h-8 px-3 rounded-md bg-primary text-primary-foreground hover:opacity-90"
+          className="inline-flex items-center gap-2 text-sm h-10 px-4 rounded-xl bg-gradient-primary text-primary-foreground shadow-sm hover:opacity-95 transition-opacity"
         >
-          <Plus className="h-3.5 w-3.5" /> Novo
+          <Plus className="h-4 w-4" /> Novo projeto
         </Link>
       </header>
 
       {isLoading ? (
-        <div className="text-xs text-muted-foreground">Carregando…</div>
+        <div className="text-sm text-muted-foreground">Carregando…</div>
       ) : !data || data.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-border p-12 text-center">
-          <p className="text-sm font-medium">Nenhum projeto ainda</p>
-          <p className="text-xs text-muted-foreground mt-1">Cadastre o primeiro para começar.</p>
+        <div className="glass rounded-3xl p-16 text-center">
+          <div className="h-14 w-14 rounded-2xl bg-accent grid place-items-center mx-auto mb-4">
+            <FolderOpen className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <p className="text-base font-medium">Nenhum projeto ainda</p>
+          <p className="text-sm text-muted-foreground mt-1">Cadastre o primeiro para começar a versionar.</p>
           <Link
             to="/novo"
             search={{ type }}
-            className="inline-flex items-center gap-1.5 mt-4 text-xs h-8 px-3 rounded-md bg-primary text-primary-foreground hover:opacity-90"
+            className="inline-flex items-center gap-2 mt-6 text-sm h-10 px-4 rounded-xl bg-gradient-primary text-primary-foreground shadow-sm"
           >
-            <Plus className="h-3.5 w-3.5" /> Cadastrar projeto
+            <Plus className="h-4 w-4" /> Cadastrar projeto
           </Link>
         </div>
       ) : (
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {data.map((p) => <ProjectCard key={p.id} p={p} />)}
         </div>
       )}
