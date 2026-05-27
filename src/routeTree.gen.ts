@@ -14,6 +14,8 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppSaasRouteImport } from './routes/_app/saas'
 import { Route as AppPaginasRouteImport } from './routes/_app/paginas'
+import { Route as AppNovoRouteImport } from './routes/_app/novo'
+import { Route as AppPIdRouteImport } from './routes/_app/p.$id'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -39,33 +41,57 @@ const AppPaginasRoute = AppPaginasRouteImport.update({
   path: '/paginas',
   getParentRoute: () => AppRoute,
 } as any)
+const AppNovoRoute = AppNovoRouteImport.update({
+  id: '/novo',
+  path: '/novo',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPIdRoute = AppPIdRouteImport.update({
+  id: '/p/$id',
+  path: '/p/$id',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/novo': typeof AppNovoRoute
   '/paginas': typeof AppPaginasRoute
   '/saas': typeof AppSaasRoute
+  '/p/$id': typeof AppPIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/novo': typeof AppNovoRoute
   '/paginas': typeof AppPaginasRoute
   '/saas': typeof AppSaasRoute
+  '/p/$id': typeof AppPIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
+  '/_app/novo': typeof AppNovoRoute
   '/_app/paginas': typeof AppPaginasRoute
   '/_app/saas': typeof AppSaasRoute
+  '/_app/p/$id': typeof AppPIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/paginas' | '/saas'
+  fullPaths: '/' | '/login' | '/novo' | '/paginas' | '/saas' | '/p/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/paginas' | '/saas'
-  id: '__root__' | '/' | '/_app' | '/login' | '/_app/paginas' | '/_app/saas'
+  to: '/' | '/login' | '/novo' | '/paginas' | '/saas' | '/p/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/_app'
+    | '/login'
+    | '/_app/novo'
+    | '/_app/paginas'
+    | '/_app/saas'
+    | '/_app/p/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -111,17 +137,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPaginasRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/novo': {
+      id: '/_app/novo'
+      path: '/novo'
+      fullPath: '/novo'
+      preLoaderRoute: typeof AppNovoRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/p/$id': {
+      id: '/_app/p/$id'
+      path: '/p/$id'
+      fullPath: '/p/$id'
+      preLoaderRoute: typeof AppPIdRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
+  AppNovoRoute: typeof AppNovoRoute
   AppPaginasRoute: typeof AppPaginasRoute
   AppSaasRoute: typeof AppSaasRoute
+  AppPIdRoute: typeof AppPIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppNovoRoute: AppNovoRoute,
   AppPaginasRoute: AppPaginasRoute,
   AppSaasRoute: AppSaasRoute,
+  AppPIdRoute: AppPIdRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
