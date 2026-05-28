@@ -17,9 +17,11 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TagPicker } from "@/components/tag-picker";
 import { toast } from "sonner";
 import { ArrowLeft, Download, ExternalLink, GitBranch, Pencil, Trash2, Upload, User } from "lucide-react";
-import { routeForType, typeLabel, type ProjectType } from "@/lib/project-types";
+import { routeForType, typeLabel, tagNamesOf, type ProjectType, type ProjectWithTags } from "@/lib/project-types";
+import { fetchUserTags, syncProjectTags } from "@/lib/tags";
 
 export const Route = createFileRoute("/_app/p/$id")({
   ssr: false,
@@ -41,6 +43,7 @@ function ProjectDetail() {
   const [editOpen, setEditOpen] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
   const [editCover, setEditCover] = useState<File | null>(null);
+  const [editTags, setEditTags] = useState<string[]>([]);
   const [editForm, setEditForm] = useState({
     type: "pagina" as ProjectType,
     title: "",
@@ -48,16 +51,25 @@ function ProjectDetail() {
     description: "",
     production_url: "",
     git_url: "",
-    tags: "",
   });
 
   const project = useQuery({
     queryKey: ["project", id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("projects").select("*").eq("id", id).single();
+      const { data, error } = await supabase
+        .from("projects")
+        .select("*, project_tags(tags(id, name))")
+        .eq("id", id)
+        .single();
       if (error) throw error;
-      return data;
+      return data as unknown as ProjectWithTags;
     },
+  });
+
+  const { data: tagSuggestions } = useQuery({
+    queryKey: ["tags", user?.id],
+    queryFn: () => fetchUserTags(user!.id),
+    enabled: !!user,
   });
 
   const versions = useQuery({
@@ -119,8 +131,8 @@ function ProjectDetail() {
       description: p.description ?? "",
       production_url: p.production_url ?? "",
       git_url: p.git_url ?? "",
-      tags: (p.tags ?? []).join(", "),
     });
+    setEditTags(tagNamesOf(p));
     setEditCover(null);
     setEditOpen(true);
   }
@@ -150,7 +162,6 @@ function ProjectDetail() {
         }
       }
 
-      const tags = editForm.tags.split(",").map((t) => t.trim()).filter(Boolean);
       const { error } = await supabase
         .from("projects")
         .update({
@@ -160,17 +171,20 @@ function ProjectDetail() {
           description: editForm.description.trim() || null,
           production_url: editForm.production_url.trim() || null,
           git_url: editForm.git_url.trim() || null,
-          tags,
           cover_url,
           updated_at: new Date().toISOString(),
         })
         .eq("id", p.id);
       if (error) throw error;
+
+      await syncProjectTags(p.id, user.id, editTags);
+
       toast.success("Projeto atualizado!");
       setEditOpen(false);
       setEditCover(null);
       qc.invalidateQueries({ queryKey: ["project", id] });
       qc.invalidateQueries({ queryKey: ["projects"] });
+      qc.invalidateQueries({ queryKey: ["tags", user.id] });
     } catch (err: any) {
       toast.error(err.message ?? "Erro ao atualizar");
     } finally {
@@ -238,9 +252,9 @@ function ProjectDetail() {
             </div>
           </div>
 
-          {p.tags && p.tags.length > 0 && (
+          {tagNamesOf(p).length > 0 && (
             <div className="flex flex-wrap gap-1">
-              {p.tags.map((t) => <Badge key={t} variant="outline" className="text-[10px]">{t}</Badge>)}
+              {tagNamesOf(p).map((t) => <Badge key={t} variant="outline" className="text-[10px]">{t}</Badge>)}
             </div>
           )}
 
@@ -372,8 +386,8 @@ function ProjectDetail() {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Tags (separadas por vírgula)</Label>
-              <Input className="h-10 rounded-xl" value={editForm.tags} onChange={(e) => setEditForm({ ...editForm, tags: e.target.value })} placeholder="react, landing" />
+              <Label className="text-xs">Tags</Label>
+              <TagPicker value={editTags} onChange={setEditTags} suggestions={tagSuggestions ?? []} />
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">Trocar imagem de capa</Label>

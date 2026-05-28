@@ -1,12 +1,10 @@
 import { Link } from "@tanstack/react-router";
 import { Badge } from "@/components/ui/badge";
 import { ExternalLink, GitBranch, User, ImageIcon } from "lucide-react";
-import type { Database } from "@/integrations/supabase/types";
-import { typeLabel } from "@/lib/project-types";
+import { typeLabel, tagNamesOf, type ProjectWithTags } from "@/lib/project-types";
 
-type Project = Database["public"]["Tables"]["projects"]["Row"];
-
-export function ProjectCard({ p }: { p: Project }) {
+export function ProjectCard({ p }: { p: ProjectWithTags }) {
+  const tags = tagNamesOf(p);
   return (
     <Link
       to="/p/$id"
@@ -39,9 +37,9 @@ export function ProjectCard({ p }: { p: Project }) {
             <span className="flex items-center gap-1"><GitBranch className="h-3.5 w-3.5" />git</span>
           )}
         </div>
-        {p.tags && p.tags.length > 0 && (
+        {tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
-            {p.tags.slice(0, 4).map((t) => (
+            {tags.slice(0, 4).map((t) => (
               <span key={t} className="text-[11px] px-2 py-0.5 rounded-full bg-accent text-accent-foreground">{t}</span>
             ))}
           </div>

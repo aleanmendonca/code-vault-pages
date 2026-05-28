@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -8,9 +9,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TagPicker } from "@/components/tag-picker";
 import { toast } from "sonner";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import { routeForType } from "@/lib/project-types";
+import { fetchUserTags, syncProjectTags } from "@/lib/tags";
 
 const searchSchema = z.object({
   type: z.enum(["pagina", "saas", "ia"]).optional(),
@@ -35,12 +38,18 @@ function NewProject() {
     production_url: "",
     git_url: "",
     author: "",
-    tags: "",
     version: "v0.1.0",
     changelog: "",
   });
+  const [tags, setTags] = useState<string[]>([]);
   const [cover, setCover] = useState<File | null>(null);
   const [zip, setZip] = useState<File | null>(null);
+
+  const { data: tagSuggestions } = useQuery({
+    queryKey: ["tags", user?.id],
+    queryFn: () => fetchUserTags(user!.id),
+    enabled: !!user,
+  });
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -56,8 +65,6 @@ function NewProject() {
         cover_url = supabase.storage.from("covers").getPublicUrl(path).data.publicUrl;
       }
 
-      const tags = form.tags.split(",").map((t) => t.trim()).filter(Boolean);
-
       const { data: project, error: pErr } = await supabase
         .from("projects")
         .insert({
@@ -68,12 +75,13 @@ function NewProject() {
           production_url: form.production_url.trim() || null,
           git_url: form.git_url.trim() || null,
           author: form.author.trim() || null,
-          tags,
           cover_url,
         })
         .select()
         .single();
       if (pErr) throw pErr;
+
+      await syncProjectTags(project.id, user.id, tags);
 
       if (zip) {
         const path = `${user.id}/${project.id}/${form.version}-${zip.name}`;
@@ -161,8 +169,9 @@ function NewProject() {
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-sm">Tags (separadas por vírgula)</Label>
-            <Input className="h-11 rounded-xl" value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} placeholder="react, landing, marketing" />
+            <Label className="text-sm">Tags</Label>
+            <TagPicker value={tags} onChange={setTags} suggestions={tagSuggestions ?? []} />
+            <p className="text-[11px] text-muted-foreground">Escolha tags já usadas ou crie novas — ficam salvas para reutilizar e filtrar.</p>
           </div>
 
           <div className="space-y-1.5">
