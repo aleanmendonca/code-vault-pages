@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
-import { FileCode2, Layers, Plus, LogOut, Vault, Bot } from "lucide-react";
+import { FileCode2, Layers, Plus, LogOut, Vault, Bot, LayoutGrid, Workflow } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app")({
@@ -25,9 +25,11 @@ function AppLayout() {
   }
 
   const items = [
+    { to: "/todos", label: "Todos", icon: LayoutGrid },
     { to: "/paginas", label: "Páginas", icon: FileCode2 },
     { to: "/saas", label: "SaaS", icon: Layers },
     { to: "/ia", label: "IA", icon: Bot },
+    { to: "/n8n", label: "N8N", icon: Workflow },
   ];
 
   return (

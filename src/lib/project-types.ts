@@ -17,12 +17,13 @@ export function tagNamesOf(p: Pick<ProjectWithTags, "project_tags">): string[] {
     .sort((a, b) => a.localeCompare(b, "pt-BR"));
 }
 
-export type ProjectRoute = "/paginas" | "/saas" | "/ia";
+export type ProjectRoute = "/paginas" | "/saas" | "/ia" | "/n8n" | "/todos";
 
 export const PROJECT_TYPES: { value: ProjectType; label: string; route: ProjectRoute }[] = [
   { value: "pagina", label: "Página", route: "/paginas" },
   { value: "saas", label: "SaaS", route: "/saas" },
   { value: "ia", label: "IA", route: "/ia" },
+  { value: "n8n", label: "N8N", route: "/n8n" },
 ];
 
 export function typeLabel(type: ProjectType): string {
@@ -35,6 +36,8 @@ export function routeForType(type: ProjectType): ProjectRoute {
       return "/saas";
     case "ia":
       return "/ia";
+    case "n8n":
+      return "/n8n";
     default:
       return "/paginas";
   }

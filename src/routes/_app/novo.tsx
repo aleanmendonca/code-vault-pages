@@ -16,7 +16,7 @@ import { routeForType } from "@/lib/project-types";
 import { fetchUserTags, syncProjectTags } from "@/lib/tags";
 
 const searchSchema = z.object({
-  type: z.enum(["pagina", "saas", "ia"]).optional(),
+  type: z.enum(["pagina", "saas", "ia", "n8n"]).optional(),
 });
 
 export const Route = createFileRoute("/_app/novo")({
@@ -32,7 +32,7 @@ function NewProject() {
   const search = Route.useSearch();
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState({
-    type: (search.type ?? "pagina") as "pagina" | "saas" | "ia",
+    type: (search.type ?? "pagina") as "pagina" | "saas" | "ia" | "n8n",
     title: "",
     description: "",
     production_url: "",
@@ -138,6 +138,7 @@ function NewProject() {
                   <SelectItem value="pagina">Página</SelectItem>
                   <SelectItem value="saas">SaaS</SelectItem>
                   <SelectItem value="ia">IA</SelectItem>
+                  <SelectItem value="n8n">N8N</SelectItem>
                 </SelectContent>
               </Select>
             </div>

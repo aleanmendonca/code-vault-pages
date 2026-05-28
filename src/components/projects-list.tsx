@@ -7,17 +7,20 @@ import { Plus, FolderOpen, Tag, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { tagNamesOf, type ProjectType, type ProjectWithTags } from "@/lib/project-types";
 
-export function ProjectsList({ type, title }: { type: ProjectType; title: string }) {
+export function ProjectsList({ type, title }: { type?: ProjectType; title: string }) {
   const [selected, setSelected] = useState<string[]>([]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["projects", type],
+    queryKey: ["projects", type ?? "all"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("projects")
         .select("*, project_tags(tags(id, name))")
-        .eq("type", type)
         .order("created_at", { ascending: false });
+      if (type) {
+        query = query.eq("type", type);
+      }
+      const { data, error } = await query;
       if (error) throw error;
       return data as unknown as ProjectWithTags[];
     },

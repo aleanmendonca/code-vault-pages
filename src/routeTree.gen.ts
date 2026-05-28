@@ -12,9 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppTodosRouteImport } from './routes/_app/todos'
 import { Route as AppSaasRouteImport } from './routes/_app/saas'
 import { Route as AppPaginasRouteImport } from './routes/_app/paginas'
 import { Route as AppNovoRouteImport } from './routes/_app/novo'
+import { Route as AppN8nRouteImport } from './routes/_app/n8n'
 import { Route as AppIaRouteImport } from './routes/_app/ia'
 import { Route as AppPIdRouteImport } from './routes/_app/p.$id'
 
@@ -32,6 +34,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppTodosRoute = AppTodosRouteImport.update({
+  id: '/todos',
+  path: '/todos',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppSaasRoute = AppSaasRouteImport.update({
   id: '/saas',
   path: '/saas',
@@ -45,6 +52,11 @@ const AppPaginasRoute = AppPaginasRouteImport.update({
 const AppNovoRoute = AppNovoRouteImport.update({
   id: '/novo',
   path: '/novo',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppN8nRoute = AppN8nRouteImport.update({
+  id: '/n8n',
+  path: '/n8n',
   getParentRoute: () => AppRoute,
 } as any)
 const AppIaRoute = AppIaRouteImport.update({
@@ -62,18 +74,22 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/ia': typeof AppIaRoute
+  '/n8n': typeof AppN8nRoute
   '/novo': typeof AppNovoRoute
   '/paginas': typeof AppPaginasRoute
   '/saas': typeof AppSaasRoute
+  '/todos': typeof AppTodosRoute
   '/p/$id': typeof AppPIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/ia': typeof AppIaRoute
+  '/n8n': typeof AppN8nRoute
   '/novo': typeof AppNovoRoute
   '/paginas': typeof AppPaginasRoute
   '/saas': typeof AppSaasRoute
+  '/todos': typeof AppTodosRoute
   '/p/$id': typeof AppPIdRoute
 }
 export interface FileRoutesById {
@@ -82,25 +98,47 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/_app/ia': typeof AppIaRoute
+  '/_app/n8n': typeof AppN8nRoute
   '/_app/novo': typeof AppNovoRoute
   '/_app/paginas': typeof AppPaginasRoute
   '/_app/saas': typeof AppSaasRoute
+  '/_app/todos': typeof AppTodosRoute
   '/_app/p/$id': typeof AppPIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/ia' | '/novo' | '/paginas' | '/saas' | '/p/$id'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/ia'
+    | '/n8n'
+    | '/novo'
+    | '/paginas'
+    | '/saas'
+    | '/todos'
+    | '/p/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/ia' | '/novo' | '/paginas' | '/saas' | '/p/$id'
+  to:
+    | '/'
+    | '/login'
+    | '/ia'
+    | '/n8n'
+    | '/novo'
+    | '/paginas'
+    | '/saas'
+    | '/todos'
+    | '/p/$id'
   id:
     | '__root__'
     | '/'
     | '/_app'
     | '/login'
     | '/_app/ia'
+    | '/_app/n8n'
     | '/_app/novo'
     | '/_app/paginas'
     | '/_app/saas'
+    | '/_app/todos'
     | '/_app/p/$id'
   fileRoutesById: FileRoutesById
 }
@@ -133,6 +171,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/todos': {
+      id: '/_app/todos'
+      path: '/todos'
+      fullPath: '/todos'
+      preLoaderRoute: typeof AppTodosRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/saas': {
       id: '/_app/saas'
       path: '/saas'
@@ -154,6 +199,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppNovoRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/n8n': {
+      id: '/_app/n8n'
+      path: '/n8n'
+      fullPath: '/n8n'
+      preLoaderRoute: typeof AppN8nRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/ia': {
       id: '/_app/ia'
       path: '/ia'
@@ -173,17 +225,21 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppIaRoute: typeof AppIaRoute
+  AppN8nRoute: typeof AppN8nRoute
   AppNovoRoute: typeof AppNovoRoute
   AppPaginasRoute: typeof AppPaginasRoute
   AppSaasRoute: typeof AppSaasRoute
+  AppTodosRoute: typeof AppTodosRoute
   AppPIdRoute: typeof AppPIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppIaRoute: AppIaRoute,
+  AppN8nRoute: AppN8nRoute,
   AppNovoRoute: AppNovoRoute,
   AppPaginasRoute: AppPaginasRoute,
   AppSaasRoute: AppSaasRoute,
+  AppTodosRoute: AppTodosRoute,
   AppPIdRoute: AppPIdRoute,
 }
 
