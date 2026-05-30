@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Download, ExternalLink, GitBranch, Pencil, Trash2, Upload, User } from "lucide-react";
 import { routeForType, typeLabel, tagNamesOf, type ProjectType, type ProjectWithTags } from "@/lib/project-types";
 import { fetchUserTags, syncProjectTags } from "@/lib/tags";
+import { GitHubWebhookSetup } from "@/components/github-webhook-setup";
 
 export const Route = createFileRoute("/_app/p/$id")({
   ssr: false,
@@ -320,6 +321,8 @@ function ProjectDetail() {
               )}
             </CardContent>
           </Card>
+
+          <GitHubWebhookSetup projectId={p.id} gitUrl={p.git_url} />
         </div>
 
         <aside className="space-y-3">
@@ -359,6 +362,7 @@ function ProjectDetail() {
                     <SelectItem value="pagina">Página</SelectItem>
                     <SelectItem value="saas">SaaS</SelectItem>
                     <SelectItem value="ia">IA</SelectItem>
+                    <SelectItem value="n8n">N8N</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

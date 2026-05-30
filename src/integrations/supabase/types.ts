@@ -103,6 +103,50 @@ export type Database = {
           },
         ]
       }
+      webhook_subscriptions: {
+        Row: {
+          id: string
+          project_id: string
+          user_id: string
+          repo_full_name: string
+          webhook_secret: string
+          branch: string
+          is_active: boolean
+          last_commit_sha: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          user_id: string
+          repo_full_name: string
+          webhook_secret: string
+          branch?: string
+          is_active?: boolean
+          last_commit_sha?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          user_id?: string
+          repo_full_name?: string
+          webhook_secret?: string
+          branch?: string
+          is_active?: boolean
+          last_commit_sha?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_subscriptions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tags: {
         Row: {
           created_at: string

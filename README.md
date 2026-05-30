@@ -18,11 +18,11 @@ Sistema de versionamento e organização de projetos web. Cadastre páginas, Saa
 - Sistema de tags dedicado (criar, reutilizar, filtrar)
 - Versionamento com upload de .zip e changelog
 - Edição e exclusão de projetos
+- Monitoramento GitHub via webhook (auto-versionamento a cada push)
 
 ## Pré-requisitos
 
 - [Node.js](https://nodejs.org/) 20+
-- [Bun](https://bun.sh/) (gerenciador de pacotes)
 - Conta no [Supabase](https://supabase.com/) com projeto criado
 
 ## Setup
@@ -37,7 +37,7 @@ cd code-vault-pages
 2. Instale as dependências:
 
 ```bash
-bun install
+npm install
 ```
 
 3. Configure as variáveis de ambiente — crie um arquivo `.env` na raiz:
@@ -45,14 +45,14 @@ bun install
 ```env
 VITE_SUPABASE_URL=https://seu-projeto.supabase.co
 VITE_SUPABASE_ANON_KEY=sua-anon-key
+SUPABASE_SERVICE_ROLE_KEY=sua-service-role-key
+GITHUB_TOKEN=ghp_xxx (opcional, para repos privados)
 ```
 
-4. Execute as migrations no SQL Editor do Supabase (em ordem):
+4. Execute a migration no SQL Editor do Supabase:
 
 ```
-supabase/migrations/20260527120000_add_ia_project_type.sql
-supabase/migrations/20260527130000_create_tags_tables.sql
-supabase/migrations/20260528120000_add_n8n_project_type.sql
+supabase/migrations/001_initial.sql
 ```
 
 5. Crie os buckets de Storage no Supabase:
@@ -62,7 +62,7 @@ supabase/migrations/20260528120000_add_n8n_project_type.sql
 6. Inicie o servidor de desenvolvimento:
 
 ```bash
-bun run dev
+npm run dev
 ```
 
 O app estará disponível em `http://localhost:8080`.
@@ -70,7 +70,7 @@ O app estará disponível em `http://localhost:8080`.
 ## Build para produção
 
 ```bash
-bun run build
+npm run build
 ```
 
 Gera o bundle em `.vercel/output/` pronto para deploy na Vercel.
@@ -115,11 +115,11 @@ A web project versioning and organization system. Register pages, SaaS apps, N8N
 - Dedicated tag system (create, reuse, filter)
 - Versioning with .zip upload and changelog
 - Project editing and deletion
+- GitHub webhook monitoring (auto-versioning on each push)
 
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) 20+
-- [Bun](https://bun.sh/) (package manager)
 - [Supabase](https://supabase.com/) account with a project created
 
 ## Setup
@@ -134,7 +134,7 @@ cd code-vault-pages
 2. Install dependencies:
 
 ```bash
-bun install
+npm install
 ```
 
 3. Set up environment variables — create a `.env` file at the root:
@@ -142,14 +142,14 @@ bun install
 ```env
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+GITHUB_TOKEN=ghp_xxx (optional, for private repos)
 ```
 
-4. Run the migrations in the Supabase SQL Editor (in order):
+4. Run the migration in the Supabase SQL Editor:
 
 ```
-supabase/migrations/20260527120000_add_ia_project_type.sql
-supabase/migrations/20260527130000_create_tags_tables.sql
-supabase/migrations/20260528120000_add_n8n_project_type.sql
+supabase/migrations/001_initial.sql
 ```
 
 5. Create Storage buckets in Supabase:
@@ -159,7 +159,7 @@ supabase/migrations/20260528120000_add_n8n_project_type.sql
 6. Start the development server:
 
 ```bash
-bun run dev
+npm run dev
 ```
 
 The app will be available at `http://localhost:8080`.
@@ -167,7 +167,7 @@ The app will be available at `http://localhost:8080`.
 ## Production build
 
 ```bash
-bun run build
+npm run build
 ```
 
 Outputs to `.vercel/output/` ready for Vercel deployment.
