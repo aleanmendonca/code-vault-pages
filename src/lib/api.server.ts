@@ -416,6 +416,14 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
     return handleSignedDownload(request);
   }
 
+  // Cron endpoints (protected with CRON_SECRET)
+  if (pathname === "/api/cron/github" && request.method === "POST") {
+    return handleCronGitHub(request);
+  }
+  if (pathname === "/api/cron/status" && request.method === "GET") {
+    return handleCronStatus(request);
+  }
+
   return null;
 }
 
@@ -592,6 +600,41 @@ async function handleSignedDownload(request: Request): Promise<Response> {
   }
 
   return serveStaticFile(path) ?? json({ error: "Not found" }, 404);
+}
+
+async function handleCronGitHub(request: Request): Promise<Response> {
+  const url = new URL(request.url);
+  const cronSecret = url.searchParams.get("secret") ?? request.headers.get("x-cron-secret");
+  const expectedSecret = process.env.CRON_SECRET;
+
+  if (expectedSecret && cronSecret !== expectedSecret) {
+    return json({ error: "Unauthorized" }, 401);
+  }
+
+  try {
+    const { runGitHubCron } = await import("@/lib/cron.server");
+    const result = await runGitHubCron();
+    return json(result);
+  } catch (err: any) {
+    return json({ error: err.message }, 500);
+  }
+}
+
+async function handleCronStatus(request: Request): Promise<Response> {
+  const token = getSessionToken(request);
+  const userId = token ? await verifyToken(token, requireJwtSecret()) : null;
+
+  if (!userId) {
+    return json({ error: "Unauthorized" }, 401);
+  }
+
+  try {
+    const { getCronStatus } = await import("@/lib/cron.server");
+    const status = await getCronStatus();
+    return json(status);
+  } catch (err: any) {
+    return json({ error: err.message }, 500);
+  }
 }
 
 // ─── Helper ────────────────────────────────────────────────────────────────────
