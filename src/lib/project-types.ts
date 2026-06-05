@@ -1,20 +1,24 @@
-import type { Database } from "@/integrations/supabase/types";
+export type ProjectType = "pagina" | "saas" | "ia" | "n8n";
 
-export type ProjectType = Database["public"]["Enums"]["project_type"];
+/** Projeto com as tags embutidas. */
+export interface ProjectWithTags {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string | null;
+  type: ProjectType;
+  author: string | null;
+  git_url: string | null;
+  production_url: string | null;
+  cover_url: string | null;
+  tags: string[];
+  created_at: string;
+  updated_at: string | null;
+}
 
-export type ProjectRow = Database["public"]["Tables"]["projects"]["Row"];
-
-/** Projeto com as tags embutidas via join project_tags -> tags. */
-export type ProjectWithTags = ProjectRow & {
-  project_tags: { tags: { id: string; name: string } | null }[] | null;
-};
-
-/** Extrai os nomes das tags (ordenados) de um projeto vindo do join. */
-export function tagNamesOf(p: Pick<ProjectWithTags, "project_tags">): string[] {
-  return (p.project_tags ?? [])
-    .map((pt) => pt.tags?.name)
-    .filter((n): n is string => Boolean(n))
-    .sort((a, b) => a.localeCompare(b, "pt-BR"));
+/** Extrai os nomes das tags (ordenados) de um projeto. */
+export function tagNamesOf(p: Pick<ProjectWithTags, "tags">): string[] {
+  return [...(p.tags ?? [])].sort((a, b) => a.localeCompare(b, "pt-BR"));
 }
 
 export type ProjectRoute = "/paginas" | "/saas" | "/ia" | "/n8n" | "/todos";

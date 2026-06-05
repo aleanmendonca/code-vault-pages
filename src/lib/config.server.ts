@@ -1,17 +1,20 @@
 import process from "node:process";
 
-// Server-only config. The .server.ts suffix prevents Vite from bundling
-// this file into the client — values here never reach the browser.
-//
-// On Cloudflare Workers, env binds at REQUEST time. Module-scope reads
-// (e.g. `const x = process.env.X`) resolve to undefined — always read
-// process.env INSIDE a function or handler.
-
 export function getServerConfig() {
   return {
-    nodeEnv: process.env.NODE_ENV,
-    supabaseUrl: process.env.VITE_SUPABASE_URL ?? "",
-    supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
+    nodeEnv: process.env.NODE_ENV ?? "development",
+    port: parseInt(process.env.PORT ?? "3000", 10),
+    databaseUrl: process.env.DATABASE_URL ?? "postgresql://postgres:postgres@localhost:5432/cloudcodevault",
+    jwtSecret: process.env.JWT_SECRET ?? "dev-secret-change-in-production",
+    uploadDir: process.env.UPLOAD_DIR ?? "./uploads",
     githubToken: process.env.GITHUB_TOKEN ?? "",
   };
+}
+
+export function requireJwtSecret(): string {
+  const secret = getServerConfig().jwtSecret;
+  if (!secret || secret === "dev-secret-change-in-production") {
+    console.warn("[WARN] Using default JWT secret. Set JWT_SECRET in production!");
+  }
+  return secret;
 }

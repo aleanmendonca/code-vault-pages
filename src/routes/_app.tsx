@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
-import { supabase } from "@/integrations/supabase/client";
+import { logout } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
 import { FileCode2, Layers, Plus, LogOut, Vault, Bot, LayoutGrid, Workflow } from "lucide-react";
@@ -77,7 +77,7 @@ function AppLayout() {
             size="sm"
             className="w-full justify-start text-sm h-9 rounded-lg"
             onClick={async () => {
-              await supabase.auth.signOut();
+              await logout();
               nav({ to: "/login" });
             }}
           >

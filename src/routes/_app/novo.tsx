@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client";
+import { createProject, createVersion } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +13,7 @@ import { TagPicker } from "@/components/tag-picker";
 import { toast } from "sonner";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import { routeForType } from "@/lib/project-types";
-import { fetchUserTags, syncProjectTags } from "@/lib/tags";
+import { fetchUserTags } from "@/lib/tags";
 
 const searchSchema = z.object({
   type: z.enum(["pagina", "saas", "ia", "n8n"]).optional(),
@@ -46,8 +46,8 @@ function NewProject() {
   const [zip, setZip] = useState<File | null>(null);
 
   const { data: tagSuggestions } = useQuery({
-    queryKey: ["tags", user?.id],
-    queryFn: () => fetchUserTags(user!.id),
+    queryKey: ["tags"],
+    queryFn: fetchUserTags,
     enabled: !!user,
   });
 
@@ -56,46 +56,27 @@ function NewProject() {
     if (!user) return;
     setBusy(true);
     try {
-      let cover_url: string | null = null;
-      if (cover) {
-        const ext = cover.name.split(".").pop() ?? "jpg";
-        const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
-        const { error } = await supabase.storage.from("covers").upload(path, cover, { upsert: false });
-        if (error) throw error;
-        cover_url = supabase.storage.from("covers").getPublicUrl(path).data.publicUrl;
-      }
+      const fd = new FormData();
+      fd.append("type", form.type);
+      fd.append("title", form.title.trim());
+      if (form.description.trim()) fd.append("description", form.description.trim());
+      if (form.production_url.trim()) fd.append("production_url", form.production_url.trim());
+      if (form.git_url.trim()) fd.append("git_url", form.git_url.trim());
+      if (form.author.trim()) fd.append("author", form.author.trim());
+      if (tags.length) fd.append("tags", JSON.stringify(tags));
+      if (cover) fd.append("cover_file", cover);
 
-      const { data: project, error: pErr } = await supabase
-        .from("projects")
-        .insert({
-          user_id: user.id,
-          type: form.type,
-          title: form.title.trim(),
-          description: form.description.trim() || null,
-          production_url: form.production_url.trim() || null,
-          git_url: form.git_url.trim() || null,
-          author: form.author.trim() || null,
-          cover_url,
-        })
-        .select()
-        .single();
-      if (pErr) throw pErr;
-
-      await syncProjectTags(project.id, user.id, tags);
+      const { data: project, error: pErr } = await createProject(fd);
+      if (pErr) throw new Error(pErr);
+      if (!project?.id) throw new Error("Projeto criado mas ID não retornado");
 
       if (zip) {
-        const path = `${user.id}/${project.id}/${form.version}-${zip.name}`;
-        const { error: zErr } = await supabase.storage.from("zips").upload(path, zip, { upsert: false });
-        if (zErr) throw zErr;
-        const { error: vErr } = await supabase.from("versions").insert({
-          project_id: project.id,
-          user_id: user.id,
-          version: form.version,
-          changelog: form.changelog.trim() || null,
-          zip_path: path,
-          zip_size: zip.size,
-        });
-        if (vErr) throw vErr;
+        const vfd = new FormData();
+        vfd.append("version", form.version);
+        if (form.changelog.trim()) vfd.append("changelog", form.changelog.trim());
+        vfd.append("zip_file", zip);
+        const { error: vErr } = await createVersion(project.id, vfd);
+        if (vErr) throw new Error(vErr);
       }
 
       toast.success("Projeto cadastrado!");

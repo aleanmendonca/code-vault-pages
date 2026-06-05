@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { getProject, updateProject, deleteProject, listVersions, createVersion, getSignedUrl } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,18 @@ import { ArrowLeft, Download, ExternalLink, GitBranch, Pencil, Trash2, Upload, U
 import { routeForType, typeLabel, tagNamesOf, type ProjectType, type ProjectWithTags } from "@/lib/project-types";
 import { fetchUserTags, syncProjectTags } from "@/lib/tags";
 import { GitHubWebhookSetup } from "@/components/github-webhook-setup";
+
+interface Version {
+  id: string;
+  project_id: string;
+  user_id: string;
+  version: string;
+  changelog: string | null;
+  git_commit: string | null;
+  zip_path: string;
+  zip_size: number | null;
+  created_at: string;
+}
 
 export const Route = createFileRoute("/_app/p/$id")({
   ssr: false,
@@ -57,54 +69,42 @@ function ProjectDetail() {
   const project = useQuery({
     queryKey: ["project", id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("projects")
-        .select("*, project_tags(tags(id, name))")
-        .eq("id", id)
-        .single();
-      if (error) throw error;
-      return data as unknown as ProjectWithTags;
+      const { data, error } = await getProject(id);
+      if (error) throw new Error(error);
+      return data as ProjectWithTags;
     },
   });
 
   const { data: tagSuggestions } = useQuery({
-    queryKey: ["tags", user?.id],
-    queryFn: () => fetchUserTags(user!.id),
+    queryKey: ["tags"],
+    queryFn: fetchUserTags,
     enabled: !!user,
   });
 
   const versions = useQuery({
     queryKey: ["versions", id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("versions").select("*").eq("project_id", id)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
+      const { data, error } = await listVersions(id);
+      if (error) throw new Error(error);
+      return (data ?? []) as Version[];
     },
   });
 
   async function uploadVersion(e: React.FormEvent) {
     e.preventDefault();
-    if (!user || !zip || !version.trim()) {
+    if (!zip || !version.trim()) {
       toast.error("Informe a versão e selecione o arquivo .zip");
       return;
     }
     setUploading(true);
     try {
-      const path = `${user.id}/${id}/${version.trim()}-${zip.name}`;
-      const { error: upErr } = await supabase.storage.from("zips").upload(path, zip, { upsert: false });
-      if (upErr) throw upErr;
-      const { error: vErr } = await supabase.from("versions").insert({
-        project_id: id,
-        user_id: user.id,
-        version: version.trim(),
-        changelog: changelog.trim() || null,
-        git_commit: gitCommit.trim() || null,
-        zip_path: path,
-        zip_size: zip.size,
-      });
-      if (vErr) throw vErr;
+      const fd = new FormData();
+      fd.append("version", version.trim());
+      if (changelog.trim()) fd.append("changelog", changelog.trim());
+      if (gitCommit.trim()) fd.append("git_commit", gitCommit.trim());
+      fd.append("zip_file", zip);
+      const { error: vErr } = await createVersion(id, fd);
+      if (vErr) throw new Error(vErr);
       toast.success("Nova versão enviada!");
       setVersion(""); setChangelog(""); setGitCommit(""); setZip(null);
       (document.getElementById("zip-input") as HTMLInputElement | null)?.value && ((document.getElementById("zip-input") as HTMLInputElement).value = "");
@@ -116,10 +116,9 @@ function ProjectDetail() {
     }
   }
 
-  async function downloadZip(zip_path: string) {
-    const { data, error } = await supabase.storage.from("zips").createSignedUrl(zip_path, 60);
-    if (error) return toast.error(error.message);
-    window.open(data.signedUrl, "_blank");
+  function downloadZip(zipPath: string) {
+    const url = getSignedUrl(zipPath);
+    window.open(url, "_blank");
   }
 
   function openEdit() {
@@ -141,51 +140,33 @@ function ProjectDetail() {
   async function saveEdit(e: React.FormEvent) {
     e.preventDefault();
     const p = project.data;
-    if (!user || !p) return;
+    if (!p) return;
     if (!editForm.title.trim()) {
       toast.error("Informe o título");
       return;
     }
     setSavingEdit(true);
     try {
-      let cover_url = p.cover_url;
-      if (editCover) {
-        const ext = editCover.name.split(".").pop() ?? "jpg";
-        const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
-        const { error: upErr } = await supabase.storage.from("covers").upload(path, editCover, { upsert: false });
-        if (upErr) throw upErr;
-        cover_url = supabase.storage.from("covers").getPublicUrl(path).data.publicUrl;
-        // remove a capa antiga (best-effort)
-        if (p.cover_url) {
-          const marker = "/covers/";
-          const idx = p.cover_url.indexOf(marker);
-          if (idx !== -1) await supabase.storage.from("covers").remove([p.cover_url.slice(idx + marker.length)]);
-        }
-      }
+      const payload: Record<string, string> = {
+        type: editForm.type,
+        title: editForm.title.trim(),
+        author: editForm.author.trim() || "",
+        description: editForm.description.trim() || "",
+        production_url: editForm.production_url.trim() || "",
+        git_url: editForm.git_url.trim() || "",
+      };
 
-      const { error } = await supabase
-        .from("projects")
-        .update({
-          type: editForm.type,
-          title: editForm.title.trim(),
-          author: editForm.author.trim() || null,
-          description: editForm.description.trim() || null,
-          production_url: editForm.production_url.trim() || null,
-          git_url: editForm.git_url.trim() || null,
-          cover_url,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", p.id);
-      if (error) throw error;
+      const { error } = await updateProject(p.id, payload);
+      if (error) throw new Error(error);
 
-      await syncProjectTags(p.id, user.id, editTags);
+      await syncProjectTags(p.id, editTags);
 
       toast.success("Projeto atualizado!");
       setEditOpen(false);
       setEditCover(null);
       qc.invalidateQueries({ queryKey: ["project", id] });
       qc.invalidateQueries({ queryKey: ["projects"] });
-      qc.invalidateQueries({ queryKey: ["tags", user.id] });
+      qc.invalidateQueries({ queryKey: ["tags"] });
     } catch (err: any) {
       toast.error(err.message ?? "Erro ao atualizar");
     } finally {
@@ -193,14 +174,11 @@ function ProjectDetail() {
     }
   }
 
-  async function deleteProject() {
+  async function handleDeleteProject() {
     const p = project.data;
     if (!p) return;
-    // delete zips
-    const paths = (versions.data ?? []).map(v => v.zip_path);
-    if (paths.length) await supabase.storage.from("zips").remove(paths);
-    const { error } = await supabase.from("projects").delete().eq("id", p.id);
-    if (error) return toast.error(error.message);
+    const { error } = await deleteProject(p.id);
+    if (error) return toast.error(error);
     toast.success("Projeto excluído");
     nav({ to: routeForType(p.type) });
   }
@@ -246,7 +224,7 @@ function ProjectDetail() {
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={deleteProject}>Excluir</AlertDialogAction>
+                    <AlertDialogAction onClick={handleDeleteProject}>Excluir</AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
@@ -309,7 +287,7 @@ function ProjectDetail() {
                         {v.changelog && <p className="text-xs text-muted-foreground mt-0.5">{v.changelog}</p>}
                         <p className="text-[10px] text-muted-foreground mt-1">
                           {new Date(v.created_at).toLocaleString("pt-BR")}
-                          {v.zip_size ? ` · ${(v.zip_size / 1024 / 1024).toFixed(2)} MB` : ""}
+                          {v.zip_size ? ` · ${(Number(v.zip_size) / 1024 / 1024).toFixed(2)} MB` : ""}
                         </p>
                       </div>
                       <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => downloadZip(v.zip_path)}>

@@ -35,11 +35,9 @@ export default defineConfig(({ mode, command }) => {
       ...(command === "build"
         ? [
             nitro({
-              preset: "vercel",
-              output: {
-                dir: ".vercel/output",
-                serverDir: ".vercel/output/functions/__server.func",
-                publicDir: ".vercel/output/static",
+              preset: "node-server",
+              rollupConfig: {
+                external: ["@node-rs/argon2"],
               },
             }),
           ]

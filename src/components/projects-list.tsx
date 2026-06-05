@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { listProjects } from "@/lib/api";
 import { ProjectCard } from "@/components/project-card";
 import { Link } from "@tanstack/react-router";
 import { Plus, FolderOpen, Tag, X } from "lucide-react";
@@ -13,16 +13,9 @@ export function ProjectsList({ type, title }: { type?: ProjectType; title: strin
   const { data, isLoading } = useQuery({
     queryKey: ["projects", type ?? "all"],
     queryFn: async () => {
-      let query = supabase
-        .from("projects")
-        .select("*, project_tags(tags(id, name))")
-        .order("created_at", { ascending: false });
-      if (type) {
-        query = query.eq("type", type);
-      }
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as unknown as ProjectWithTags[];
+      const { data: projects, error } = await listProjects(type);
+      if (error) throw new Error(error);
+      return (projects ?? []) as ProjectWithTags[];
     },
   });
 

@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { listTags } from "@/lib/api";
 
 /** Normaliza uma lista de nomes de tag: trim, remove vazios e duplicatas (case-insensitive). */
 export function normalizeTagNames(names: string[]): string[] {
@@ -16,46 +16,26 @@ export function normalizeTagNames(names: string[]): string[] {
 }
 
 /** Busca todas as tags do usuário (ordenadas por nome) para sugerir no seletor. */
-export async function fetchUserTags(userId: string): Promise<string[]> {
-  const { data, error } = await supabase
-    .from("tags")
-    .select("name")
-    .eq("user_id", userId)
-    .order("name", { ascending: true });
-  if (error) throw error;
-  return (data ?? []).map((t) => t.name);
+export async function fetchUserTags(): Promise<string[]> {
+  const { data, error } = await listTags();
+  if (error) throw new Error(error);
+  return (data ?? []).map((t) => t.name).sort((a, b) => a.localeCompare(b, "pt-BR"));
 }
 
 /**
- * Sincroniza as tags de um projeto:
- * 1. garante que cada nome exista na tabela `tags` do usuário (cria se novo);
- * 2. substitui os vínculos em `project_tags` pelos selecionados.
+ * Sincroniza as tags de um projeto: envia a lista de nomes ao servidor
+ * para que ele faça o upsert na tabela tags e a关联 com project_tags.
  */
-export async function syncProjectTags(projectId: string, userId: string, names: string[]): Promise<void> {
+export async function syncProjectTags(projectId: string, names: string[]): Promise<void> {
   const clean = normalizeTagNames(names);
-
-  // 1. upsert das tags (a unique (user_id, name) evita duplicatas)
-  let tagIds: string[] = [];
-  if (clean.length) {
-    const { data, error } = await supabase
-      .from("tags")
-      .upsert(
-        clean.map((name) => ({ user_id: userId, name })),
-        { onConflict: "user_id,name" },
-      )
-      .select("id");
-    if (error) throw error;
-    tagIds = (data ?? []).map((t) => t.id);
-  }
-
-  // 2. reseta os vínculos do projeto
-  const { error: delErr } = await supabase.from("project_tags").delete().eq("project_id", projectId);
-  if (delErr) throw delErr;
-
-  if (tagIds.length) {
-    const { error: insErr } = await supabase
-      .from("project_tags")
-      .insert(tagIds.map((tag_id) => ({ project_id: projectId, tag_id })));
-    if (insErr) throw insErr;
+  const response = await fetch(`/api/projects/${projectId}/tags`, {
+    method: "PUT",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tags: clean }),
+  });
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.error ?? "Erro ao sincronizar tags");
   }
 }

@@ -1,6 +1,6 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { login, register, getMe } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,8 +22,8 @@ function LoginPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) nav({ to: "/paginas" });
+    getMe().then(({ user }) => {
+      if (user) nav({ to: "/paginas" });
     });
   }, [nav]);
 
@@ -32,17 +32,13 @@ function LoginPage() {
     setBusy(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: `${window.location.origin}/paginas` },
-        });
-        if (error) throw error;
+        const { error } = await register(email, password);
+        if (error) throw new Error(error);
         toast.success("Conta criada. Você já pode entrar.");
         setMode("login");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        const { error } = await login(email, password);
+        if (error) throw new Error(error);
         nav({ to: "/paginas" });
       }
     } catch (err: any) {

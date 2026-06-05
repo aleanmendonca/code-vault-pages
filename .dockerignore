@@ -1,0 +1,11 @@
+node_modules
+dist
+.vercel
+.tanstack
+.nitro
+*.local
+.env
+.env.local
+uploads
+.vscode
+.DS_Store

@@ -1,0 +1,15 @@
+refactor: migrate from Supabase to self-hosted Docker + PostgreSQL
+
+- Replaced Supabase (auth, database, storage) with self-hosted solution
+- Added Drizzle ORM with PostgreSQL (docker-compose)
+- Implemented JWT auth with argon2 password hashing (httpOnly cookies)
+- Created local filesystem storage for covers and zips
+- Added API layer (server-side handlers for auth, projects, versions, tags, webhooks)
+- Created Docker + docker-compose setup for EasyPanel deployment
+- Added Dockerfile and .env.example
+- Updated all components to use new API client
+- Removed all Supabase dependencies from codebase
+
+BREAKING: Requires PostgreSQL and Docker for deployment. No longer uses Supabase.
+
+Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>

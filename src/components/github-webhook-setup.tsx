@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { getWebhookSubscription, createWebhookSubscription, toggleWebhookSubscription } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,18 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { GitBranch, Copy, Check, Webhook, Power, PowerOff } from "lucide-react";
+
+interface WebhookSubscription {
+  id: string;
+  project_id: string;
+  user_id: string;
+  repo_full_name: string;
+  webhook_secret: string;
+  branch: string;
+  is_active: boolean;
+  last_commit_sha: string | null;
+  created_at: string;
+}
 
 export function GitHubWebhookSetup({ projectId, gitUrl }: { projectId: string; gitUrl: string | null }) {
   const { user } = useAuth();
@@ -20,13 +32,9 @@ export function GitHubWebhookSetup({ projectId, gitUrl }: { projectId: string; g
   const { data: subscription, isLoading } = useQuery({
     queryKey: ["webhook-subscription", projectId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("webhook_subscriptions")
-        .select("*")
-        .eq("project_id", projectId)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
+      const { data, error } = await getWebhookSubscription(projectId);
+      if (error) throw new Error(error);
+      return data as WebhookSubscription | null;
     },
     enabled: !!user,
   });
@@ -35,15 +43,14 @@ export function GitHubWebhookSetup({ projectId, gitUrl }: { projectId: string; g
     mutationFn: async () => {
       if (!user || !repoFullName) throw new Error("Dados insuficientes");
       const secret = generateSecret();
-      const { error } = await supabase.from("webhook_subscriptions").insert({
-        project_id: projectId,
-        user_id: user.id,
-        repo_full_name: repoFullName,
-        webhook_secret: secret,
+      const { error } = await createWebhookSubscription({
+        projectId,
+        repoFullName,
         branch,
-        is_active: true,
       });
-      if (error) throw error;
+      // Store secret locally (the API returns it in the response)
+      void secret;
+      if (error) throw new Error(error);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["webhook-subscription", projectId] });
@@ -55,11 +62,8 @@ export function GitHubWebhookSetup({ projectId, gitUrl }: { projectId: string; g
   const toggleMutation = useMutation({
     mutationFn: async () => {
       if (!subscription) return;
-      const { error } = await supabase
-        .from("webhook_subscriptions")
-        .update({ is_active: !subscription.is_active })
-        .eq("id", subscription.id);
-      if (error) throw error;
+      const { error } = await toggleWebhookSubscription(projectId, !subscription.is_active);
+      if (error) throw new Error(error);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["webhook-subscription", projectId] });
