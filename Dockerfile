@@ -33,6 +33,11 @@ ENV PORT=3000
 COPY --from=builder /app/.output ./.output
 COPY --from=builder /app/package.json ./package.json
 
+# Install production-only dependencies for native modules (e.g. @node-rs/argon2)
+# marked as external by vite.config.ts. These can't be bundled, so they must be
+# present at runtime. We use `npm install --omit=dev` to keep the image small.
+RUN npm install --omit=dev --no-audit --no-fund --loglevel=error
+
 # Create uploads directory
 RUN mkdir -p /app/uploads/covers /app/uploads/zips
 
