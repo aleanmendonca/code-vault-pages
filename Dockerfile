@@ -9,7 +9,8 @@ RUN apk add --no-cache python3 make g++ openssl
 COPY package*.json ./
 
 # Install all dependencies (including dev for build)
-RUN npm ci
+# Using npm install (not npm ci) to avoid lock file sync issues
+RUN npm install --no-audit --no-fund --loglevel=error
 
 # Copy source
 COPY . .
