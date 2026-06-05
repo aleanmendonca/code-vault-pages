@@ -334,6 +334,11 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
   const url = new URL(request.url);
   const pathname = url.pathname;
 
+  // Health check (public)
+  if (pathname === "/api/health" && request.method === "GET") {
+    return json({ status: "ok", timestamp: new Date().toISOString() });
+  }
+
   // Auth routes
   if (pathname === "/api/auth/register" && request.method === "POST") {
     return handleAuthRegister(request);

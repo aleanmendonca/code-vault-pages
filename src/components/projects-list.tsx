@@ -41,28 +41,22 @@ export function ProjectsList({ type, title }: { type?: ProjectType; title: strin
   }
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
-      <header className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {data?.length ?? 0} {data?.length === 1 ? "projeto cadastrado" : "projetos cadastrados"}
-            {selected.length > 0 && ` · ${filtered.length} com o filtro`}
-          </p>
-        </div>
-        <Link
-          to="/novo"
-          search={{ type }}
-          className="inline-flex items-center gap-2 text-sm h-10 px-4 rounded-xl bg-gradient-primary text-primary-foreground shadow-sm hover:opacity-95 transition-opacity"
-        >
-          <Plus className="h-4 w-4" /> Novo projeto
-        </Link>
-      </header>
+    <div className="max-w-6xl">
+      {/* Header - asymmetric */}
+      <div className="mb-12">
+        <h1 className="text-display-sm text-foreground mb-4">{title}</h1>
+        <p className="text-sm text-muted-foreground">
+          {data?.length ?? 0} {data?.length === 1 ? "project" : "projects"}
+          {selected.length > 0 && ` · ${filtered.length} filtered`}
+        </p>
+      </div>
 
+      {/* Tag filter - micro text */}
       {availableTags.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5 mb-8">
-          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground mr-1">
-            <Tag className="h-3.5 w-3.5" /> Filtrar:
+        <div className="flex flex-wrap items-center gap-3 mb-10">
+          <span className="text-micro text-muted-foreground flex items-center gap-1">
+            <Tag className="h-3 w-3" />
+            Filter
           </span>
           {availableTags.map((tag) => {
             const active = selected.includes(tag);
@@ -72,10 +66,10 @@ export function ProjectsList({ type, title }: { type?: ProjectType; title: strin
                 type="button"
                 onClick={() => toggleTag(tag)}
                 className={cn(
-                  "text-xs px-2.5 py-1 rounded-full border transition-colors",
+                  "text-micro transition-colors px-2 py-1",
                   active
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-accent/50 text-accent-foreground border-transparent hover:bg-accent",
+                    ? "bg-foreground text-background"
+                    : "bg-surface text-muted-foreground hover:bg-surface-elevated hover:text-foreground",
                 )}
               >
                 {tag}
@@ -86,38 +80,43 @@ export function ProjectsList({ type, title }: { type?: ProjectType; title: strin
             <button
               type="button"
               onClick={() => setSelected([])}
-              className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full text-muted-foreground hover:text-foreground"
+              className="text-micro text-muted-foreground hover:text-foreground transition-colors ml-2"
             >
-              <X className="h-3 w-3" /> Limpar
+              <X className="h-3 w-3 inline mr-1" />
+              Clear
             </button>
           )}
         </div>
       )}
 
+      {/* Content */}
       {isLoading ? (
-        <div className="text-sm text-muted-foreground">Carregando…</div>
+        <div className="text-micro text-muted">Loading</div>
       ) : !data || data.length === 0 ? (
-        <div className="glass rounded-3xl p-16 text-center">
-          <div className="h-14 w-14 rounded-2xl bg-accent grid place-items-center mx-auto mb-4">
-            <FolderOpen className="h-6 w-6 text-muted-foreground" />
+        <div className="surface-elevated border border-border p-16 text-center">
+          <div className="mb-6">
+            <FolderOpen className="h-8 w-8 text-muted mx-auto" />
           </div>
-          <p className="text-base font-medium">Nenhum projeto ainda</p>
-          <p className="text-sm text-muted-foreground mt-1">Cadastre o primeiro para começar a versionar.</p>
+          <p className="text-base font-medium mb-2">No projects yet</p>
+          <p className="text-sm text-muted-foreground mb-6">Add your first project to start versioning.</p>
           <Link
             to="/novo"
             search={{ type }}
-            className="inline-flex items-center gap-2 mt-6 text-sm h-10 px-4 rounded-xl bg-gradient-primary text-primary-foreground shadow-sm"
+            className="inline-block bg-foreground text-background text-micro px-6 py-3 hover:opacity-80 transition-opacity"
           >
-            <Plus className="h-4 w-4" /> Cadastrar projeto
+            <Plus className="h-4 w-4 inline mr-2" />
+            Add project
           </Link>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="glass rounded-3xl p-12 text-center">
-          <p className="text-sm text-muted-foreground">Nenhum projeto com as tags selecionadas.</p>
+        <div className="surface-elevated border border-border p-12 text-center">
+          <p className="text-sm text-muted-foreground">No projects with selected tags.</p>
         </div>
       ) : (
-        <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((p) => <ProjectCard key={p.id} p={p} />)}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filtered.map((p) => (
+            <ProjectCard key={p.id} p={p} />
+          ))}
         </div>
       )}
     </div>

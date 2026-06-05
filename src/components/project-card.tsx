@@ -1,46 +1,71 @@
 import { Link } from "@tanstack/react-router";
-import { Badge } from "@/components/ui/badge";
 import { ExternalLink, GitBranch, User, ImageIcon } from "lucide-react";
 import { typeLabel, tagNamesOf, type ProjectWithTags } from "@/lib/project-types";
 
 export function ProjectCard({ p }: { p: ProjectWithTags }) {
   const tags = tagNamesOf(p);
+
   return (
     <Link
       to="/p/$id"
       params={{ id: p.id }}
-      className="group flex flex-col rounded-2xl glass overflow-hidden hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300"
+      className="group surface-elevated border border-border hover:border-foreground transition-colors"
     >
-      <div className="aspect-[16/10] bg-muted/50 overflow-hidden relative">
+      {/* Cover - no rounded corners, rule 12 */}
+      <div className="aspect-[16/9] bg-surface overflow-hidden relative">
         {p.cover_url ? (
-          <img src={p.cover_url} alt={p.title} className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500" />
+          <img
+            src={p.cover_url}
+            alt={p.title}
+            className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
+          />
         ) : (
-          <div className="w-full h-full grid place-items-center text-muted-foreground bg-gradient-to-br from-muted/40 to-accent/40">
-            <ImageIcon className="h-8 w-8 opacity-40" />
+          <div className="w-full h-full grid place-items-center bg-background">
+            <ImageIcon className="h-8 w-8 text-muted" />
           </div>
         )}
-        <Badge variant="secondary" className="absolute top-3 right-3 text-[10px] uppercase tracking-wide rounded-full backdrop-blur-md bg-background/70">
+        {/* Type label - micro text, uppercase */}
+        <span className="absolute top-3 right-3 text-micro text-muted-foreground bg-background/80 px-2 py-1">
           {typeLabel(p.type)}
-        </Badge>
+        </span>
       </div>
-      <div className="p-4 flex flex-col gap-2.5 flex-1">
-        <h3 className="text-base font-semibold tracking-tight line-clamp-1">{p.title}</h3>
-        {p.description && <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">{p.description}</p>}
-        <div className="flex items-center gap-3 text-xs text-muted-foreground mt-auto pt-2">
+
+      {/* Content - asymmetric padding */}
+      <div className="p-5">
+        <h3 className="text-base font-medium tracking-tight mb-1">{p.title}</h3>
+        {p.description && (
+          <p className="text-sm text-muted-foreground line-clamp-2 mb-4">{p.description}</p>
+        )}
+
+        {/* Meta - font-mono */}
+        <div className="flex items-center gap-4 font-mono text-micro text-muted mb-4">
           {p.author && (
-            <span className="flex items-center gap-1"><User className="h-3.5 w-3.5" />{p.author}</span>
+            <span className="flex items-center gap-1">
+              <User className="h-3 w-3" />
+              {p.author}
+            </span>
           )}
           {p.production_url && (
-            <span className="flex items-center gap-1"><ExternalLink className="h-3.5 w-3.5" />prod</span>
+            <span className="flex items-center gap-1">
+              <ExternalLink className="h-3 w-3" />
+              <span>prod</span>
+            </span>
           )}
           {p.git_url && (
-            <span className="flex items-center gap-1"><GitBranch className="h-3.5 w-3.5" />git</span>
+            <span className="flex items-center gap-1">
+              <GitBranch className="h-3 w-3" />
+              <span>git</span>
+            </span>
           )}
         </div>
+
+        {/* Tags - micro text */}
         {tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-2">
             {tags.slice(0, 4).map((t) => (
-              <span key={t} className="text-[11px] px-2 py-0.5 rounded-full bg-accent text-accent-foreground">{t}</span>
+              <span key={t} className="text-micro text-muted-foreground bg-surface px-2 py-0.5">
+                {t}
+              </span>
             ))}
           </div>
         )}

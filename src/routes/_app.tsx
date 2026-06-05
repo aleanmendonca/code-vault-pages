@@ -1,95 +1,136 @@
-import { createFileRoute, Outlet, Link, useNavigate, useLocation } from "@tanstack/react-router";
-import { useAuth } from "@/hooks/use-auth";
-import { logout } from "@/lib/api";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+import { Outlet, Link, useNavigate, createFileRoute } from "@tanstack/react-router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { getMe, logout } from "@/lib/api";
+import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-import { FileCode2, Layers, Plus, LogOut, Vault, Bot, LayoutGrid, Workflow } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Bot, Layers, Plus, Zap, LogOut, LayoutGrid, GitBranch } from "lucide-react";
 
 export const Route = createFileRoute("/_app")({
-  ssr: false,
   component: AppLayout,
 });
 
 function AppLayout() {
-  const { user, loading } = useAuth();
   const nav = useNavigate();
-  const loc = useLocation();
+  const [user, setUser] = useState<{ id: string; email: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getMe().then(({ user }) => {
+      if (!user) {
+        nav({ to: "/login", replace: true });
+      } else {
+        setUser(user);
+        setLoading(false);
+      }
+    });
+  }, [nav]);
+
+  async function handleLogout() {
+    await logout();
+    nav({ to: "/login", replace: true });
+  }
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">Carregando…</div>;
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <span className="text-micro text-muted">Loading</span>
+      </div>
+    );
   }
-  if (!user) {
-    nav({ to: "/login" });
-    return null;
-  }
-
-  const items = [
-    { to: "/todos", label: "Todos", icon: LayoutGrid },
-    { to: "/paginas", label: "Páginas", icon: FileCode2 },
-    { to: "/saas", label: "SaaS", icon: Layers },
-    { to: "/ia", label: "IA", icon: Bot },
-    { to: "/n8n", label: "N8N", icon: Workflow },
-  ];
 
   return (
-    <div className="min-h-screen flex">
-      <Toaster richColors position="top-right" />
-      <aside className="w-64 shrink-0 m-3 mr-0 rounded-2xl glass flex flex-col overflow-hidden">
-        <div className="h-14 px-5 flex items-center gap-2.5 border-b border-border/60">
-          <div className="h-8 w-8 rounded-lg bg-gradient-primary grid place-items-center shadow-sm">
-            <Vault className="h-4 w-4 text-primary-foreground" />
-          </div>
-          <span className="text-base font-semibold tracking-tight">Cloud Code Vault</span>
-        </div>
-        <nav className="flex-1 p-3 space-y-1">
-          <Link
-            to="/novo"
-            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-sm font-medium bg-gradient-primary text-primary-foreground shadow-sm hover:opacity-95 transition-opacity mb-3"
-          >
-            <Plus className="h-4 w-4" />
-            Novo projeto
-          </Link>
-          <div className="px-2 pb-1 text-[11px] uppercase tracking-wider text-muted-foreground/70 font-semibold">Biblioteca</div>
-          {items.map((it) => {
-            const active = loc.pathname.startsWith(it.to);
-            return (
-              <Link
-                key={it.to}
-                to={it.to}
-                className={cn(
-                  "flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all",
-                  active
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-sm"
-                    : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
-                )}
-              >
-                <it.icon className="h-4 w-4" />
-                {it.label}
-              </Link>
-            );
-          })}
-        </nav>
-        <div className="p-3 border-t border-border/60">
-          <div className="px-3 py-1.5 text-xs text-muted-foreground truncate">{user.email}</div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start text-sm h-9 rounded-lg"
-            onClick={async () => {
-              await logout();
-              nav({ to: "/login" });
-            }}
-          >
-            <LogOut className="h-4 w-4 mr-2" />
-            Sair
-          </Button>
-        </div>
-      </aside>
+    <QueryClientProvider client={new QueryClient()}>
+      <div className="min-h-screen bg-background">
+        <Toaster richColors position="top-right" />
 
-      <main className="flex-1 min-w-0">
-        <Outlet />
-      </main>
-    </div>
+        {/* Header - asymmetric, left-aligned */}
+        <header className="fixed top-0 left-0 right-0 z-50 surface border-b border-border">
+          <div className="flex items-center justify-between px-6 py-4">
+            <div className="flex items-center gap-6">
+              {/* Logo */}
+              <Link to="/paginas" className="flex items-center gap-3 group">
+                <div className="w-8 h-8 bg-foreground flex items-center justify-center">
+                  <span className="text-micro text-background">CV</span>
+                </div>
+                <span className="font-medium text-sm tracking-tight group-hover:opacity-70 transition-opacity">
+                  Cloud Vault
+                </span>
+              </Link>
+
+              {/* Navigation - asymmetric spacing */}
+              <nav className="hidden md:flex items-center gap-1 ml-16">
+                <NavLink to="/paginas" icon={<LayoutGrid className="w-4 h-4" />}>
+                  Todos
+                </NavLink>
+                <NavLink to="/paginas?type=pagina" icon={<Layers className="w-4 h-4" />}>
+                  Páginas
+                </NavLink>
+                <NavLink to="/paginas?type=saas" icon={<Zap className="w-4 h-4" />}>
+                  SaaS
+                </NavLink>
+                <NavLink to="/paginas?type=ia" icon={<Bot className="w-4 h-4" />}>
+                  IA
+                </NavLink>
+                <NavLink to="/paginas?type=n8n" icon={<GitBranch className="w-4 h-4" />}>
+                  N8N
+                </NavLink>
+              </nav>
+            </div>
+
+            {/* Right side - asymmetric */}
+            <div className="flex items-center gap-4">
+              <Link
+                to="/novo"
+                className="flex items-center gap-2 px-4 py-2 bg-foreground text-background text-micro hover:bg-foreground/80 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Novo
+              </Link>
+
+              <button
+                onClick={handleLogout}
+                className="p-2 text-muted hover:text-foreground transition-colors"
+                title="Sair"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </header>
+
+        {/* Main content - asymmetric padding */}
+        <main className="pt-24 pb-12 px-6 md:px-12 offset-left">
+          <Outlet />
+        </main>
+
+        {/* Footer - minimal */}
+        <footer className="fixed bottom-0 left-0 right-0 px-6 py-3 surface border-t border-border">
+          <div className="flex items-center justify-between text-micro text-muted">
+            <span>Cloud Vault</span>
+            <span>{user?.email}</span>
+          </div>
+        </footer>
+      </div>
+    </QueryClientProvider>
+  );
+}
+
+function NavLink({ to, icon, children }: { to: string; icon: React.ReactNode; children: React.ReactNode }) {
+  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+  const isActive = currentPath === to || (to.includes("type=") && window.location.search.includes(to.split("=")[1]));
+
+  return (
+    <Link
+      to={to}
+      className={`flex items-center gap-2 px-3 py-2 text-micro transition-colors ${
+        isActive
+          ? "bg-foreground text-background"
+          : "text-muted-foreground hover:text-foreground"
+      }`}
+    >
+      {icon}
+      {children}
+    </Link>
   );
 }

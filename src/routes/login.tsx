@@ -1,16 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { login, register, getMe } from "@/lib/api";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-import { Vault } from "lucide-react";
 
 export const Route = createFileRoute("/login")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Entrar — Cloud Code Vault" }] }),
+  head: () => ({ meta: [{ title: "Entrar — Cloud Vault" }] }),
   component: LoginPage,
 });
 
@@ -49,46 +45,72 @@ function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
+    <div className="min-h-screen bg-background flex items-center justify-start p-8">
       <Toaster richColors position="top-right" />
-      <div className="w-full max-w-md">
-        <div className="glass-strong rounded-3xl p-8">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="h-11 w-11 rounded-xl bg-gradient-primary grid place-items-center shadow-md">
-              <Vault className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-xl font-semibold tracking-tight">Cloud Code Vault</h1>
-              <p className="text-sm text-muted-foreground">
-                {mode === "login" ? "Entre para gerenciar seus projetos." : "Crie sua conta."}
-              </p>
-            </div>
-          </div>
 
-          <form onSubmit={submit} className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-sm">E-mail</Label>
-              <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="h-11 rounded-xl" />
+      {/* Asymmetric layout - rule 06: left-aligned, not centered */}
+      <div className="w-full max-w-md offset-left">
+        {/* Large display text - rule 05: extreme sizes */}
+        <div className="mb-16">
+          <h1 className="text-display-lg text-foreground/10">Vault</h1>
+          <p className="text-micro text-muted mt-2">Cloud storage for your code projects</p>
+        </div>
+
+        {/* Auth card - minimal, no glassmorphism */}
+        <div className="surface-elevated p-8">
+          <h2 className="text-micro text-muted mb-8">
+            {mode === "login" ? "Sign in" : "Create account"}
+          </h2>
+
+          <form onSubmit={submit} className="space-y-6">
+            <div className="space-y-2">
+              <label htmlFor="email" className="text-micro text-muted-foreground block">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full h-11 px-4 bg-background border border-border text-foreground text-sm focus:outline-none focus:border-foreground transition-colors"
+                placeholder="you@example.com"
+              />
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="password" className="text-sm">Senha</Label>
-              <Input id="password" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className="h-11 rounded-xl" />
+
+            <div className="space-y-2">
+              <label htmlFor="password" className="text-micro text-muted-foreground block">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                required
+                minLength={6}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full h-11 px-4 bg-background border border-border text-foreground text-sm focus:outline-none focus:border-foreground transition-colors"
+                placeholder="••••••••"
+              />
             </div>
-            <Button type="submit" className="w-full h-11 rounded-xl text-sm bg-gradient-primary" disabled={busy}>
-              {busy ? "Aguarde..." : mode === "login" ? "Entrar" : "Criar conta"}
-            </Button>
+
+            <button
+              type="submit"
+              className="w-full h-11 bg-foreground text-background text-micro disabled:opacity-50 transition-opacity hover:opacity-80"
+              disabled={busy}
+            >
+              {busy ? "Wait..." : mode === "login" ? "Sign in" : "Create account"}
+            </button>
+
             <button
               type="button"
               onClick={() => setMode(mode === "login" ? "signup" : "login")}
-              className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="w-full text-sm text-muted hover:text-foreground transition-colors"
             >
-              {mode === "login" ? "Não tem conta? Cadastre-se" : "Já tem conta? Entrar"}
+              {mode === "login" ? "No account? Sign up" : "Have account? Sign in"}
             </button>
           </form>
         </div>
-        <p className="text-center text-xs text-muted-foreground mt-4">
-          Armazene código, versionamento e capas — tudo em um lugar.
-        </p>
       </div>
     </div>
   );
